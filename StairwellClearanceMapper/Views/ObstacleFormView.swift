@@ -12,6 +12,7 @@ struct ObstacleFormView: View {
     @State private var name: String
     @State private var note: String
     @State private var fields: [String: MeasurementDraft]
+    @FocusState private var focus: FieldFocus?
 
     init(kindType: Obstacle.KindType, existing: Obstacle?) {
         self.kindType = kindType
@@ -102,6 +103,31 @@ struct ObstacleFormView: View {
         }
     }
 
+    /// Every focusable field in entry order: name, note, then each
+    /// measurement (ft then in, or one cm field).
+    private var focusOrder: [FieldFocus] {
+        var order: [FieldFocus] = [.name, .note]
+        for spec in specs {
+            if units == .inches {
+                order.append(.measurement(key: "field.\(spec.key)", part: .feet))
+                order.append(.measurement(key: "field.\(spec.key)", part: .inches))
+            } else {
+                order.append(.measurement(key: "field.\(spec.key)", part: .cm))
+            }
+        }
+        return order
+    }
+
+    private func advanceFocus() {
+        guard let focus,
+              let index = focusOrder.firstIndex(of: focus),
+              index + 1 < focusOrder.count else {
+            self.focus = nil
+            return
+        }
+        self.focus = focusOrder[index + 1]
+    }
+
     private var allValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty
             && specs.allSatisfy { fields[$0.key]?.isValid(units: units) == true }
@@ -111,10 +137,16 @@ struct ObstacleFormView: View {
         Form {
             Section("Name") {
                 TextField(kindType.title, text: $name)
+                    .focused($focus, equals: .name)
+                    .submitLabel(.next)
+                    .onSubmit(advanceFocus)
                     .accessibilityIdentifier("obstacleName")
             }
             Section("Note (optional)") {
                 TextField("e.g. “rail comes off with 3 screws”", text: $note)
+                    .focused($focus, equals: .note)
+                    .submitLabel(.next)
+                    .onSubmit(advanceFocus)
                     .accessibilityIdentifier("obstacleNote")
             }
             Section("Measurements") {
@@ -124,7 +156,9 @@ struct ObstacleFormView: View {
                                          hint: spec.hint,
                                          draft: draft,
                                          units: units,
-                                         fieldID: "field.\(spec.key)")
+                                         fieldID: "field.\(spec.key)",
+                                         focus: $focus,
+                                         onSubmit: advanceFocus)
                     }
                 }
             }
@@ -138,6 +172,12 @@ struct ObstacleFormView: View {
                 Button("Save") { save() }
                     .disabled(!allValid)
                     .accessibilityIdentifier("saveObstacle")
+            }
+            ToolbarItemGroup(placement: .keyboard) {
+                Button("Next") { advanceFocus() }
+                    .disabled(focus == focusOrder.last || focus == nil)
+                Spacer()
+                Button("Done") { focus = nil }
             }
         }
         .onAppear {

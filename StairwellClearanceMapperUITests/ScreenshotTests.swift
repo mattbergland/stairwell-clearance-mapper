@@ -69,6 +69,9 @@ final class ScreenshotTests: XCTestCase {
         widthInches.tap()
         widthInches.typeText("2")
         XCTAssertTrue(app.staticTexts["fieldError"].waitForExistence(timeout: 5))
+        // Dismiss the keyboard so the error line is fully visible.
+        _ = app.buttons["Done"].waitForExistence(timeout: 5)
+        app.buttons["Done"].tap()
         shot("05-obstacle-form-error")
         // The form is a pushed screen inside the picker sheet — go back,
         // then cancel the sheet so the tab bar is usable again.

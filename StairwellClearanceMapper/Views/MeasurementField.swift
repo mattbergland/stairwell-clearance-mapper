@@ -43,6 +43,21 @@ final class MeasurementDraft: ObservableObject {
     }
 }
 
+/// Which field currently has the keyboard, tracked at the form level so
+/// Return / Next can walk through every field in order.
+enum FieldFocus: Hashable {
+    case name
+    case note
+    case weight
+    case measurement(key: String, part: MeasurementPart)
+}
+
+enum MeasurementPart: Hashable {
+    case feet
+    case inches
+    case cm
+}
+
 /// One measurement with a label, a plain-language "what to measure" hint,
 /// and inline validation. Inches mode shows separate ft and in fields.
 struct MeasurementField: View {
@@ -51,9 +66,19 @@ struct MeasurementField: View {
     @ObservedObject var draft: MeasurementDraft
     let units: MeasurementUnits
     let fieldID: String
-    var submitLabel: SubmitLabel = .next
+    var focus: FocusState<FieldFocus?>.Binding
     var onSubmit: () -> Void = {}
-    @FocusState private var focused: Bool
+
+    /// The focus values this field owns, in entry order.
+    var focusValues: [FieldFocus] {
+        switch units {
+        case .inches:
+            return [.measurement(key: fieldID, part: .feet),
+                    .measurement(key: fieldID, part: .inches)]
+        case .centimeters:
+            return [.measurement(key: fieldID, part: .cm)]
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -68,8 +93,8 @@ struct MeasurementField: View {
                         .keyboardType(.decimalPad)
                         .frame(minWidth: 60)
                         .textFieldStyle(.roundedBorder)
-                        .focused($focused)
-                        .submitLabel(submitLabel)
+                        .focused(focus, equals: .measurement(key: fieldID, part: .feet))
+                        .submitLabel(.next)
                         .onSubmit(onSubmit)
                         .accessibilityIdentifier("\(fieldID).feet")
                         .accessibilityLabel("\(label), feet")
@@ -78,8 +103,8 @@ struct MeasurementField: View {
                         .keyboardType(.decimalPad)
                         .frame(minWidth: 60)
                         .textFieldStyle(.roundedBorder)
-                        .focused($focused)
-                        .submitLabel(submitLabel)
+                        .focused(focus, equals: .measurement(key: fieldID, part: .inches))
+                        .submitLabel(.next)
                         .onSubmit(onSubmit)
                         .accessibilityIdentifier("\(fieldID).inches")
                         .accessibilityLabel("\(label), inches")
@@ -91,8 +116,8 @@ struct MeasurementField: View {
                         .keyboardType(.decimalPad)
                         .frame(minWidth: 80)
                         .textFieldStyle(.roundedBorder)
-                        .focused($focused)
-                        .submitLabel(submitLabel)
+                        .focused(focus, equals: .measurement(key: fieldID, part: .cm))
+                        .submitLabel(.next)
                         .onSubmit(onSubmit)
                         .accessibilityIdentifier("\(fieldID).cm")
                         .accessibilityLabel("\(label), centimeters")
@@ -104,12 +129,6 @@ struct MeasurementField: View {
             }
         }
         .padding(.vertical, 4)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { focused = false }
-            }
-        }
     }
 
     private var showsError: Bool {

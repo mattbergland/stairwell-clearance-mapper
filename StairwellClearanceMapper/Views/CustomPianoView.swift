@@ -11,6 +11,32 @@ struct CustomPianoView: View {
     @State private var dim1 = MeasurementDraft() // width or length
     @State private var dim2 = MeasurementDraft() // depth/height or width/thickness
     @State private var dim3 = MeasurementDraft()
+    @FocusState private var focus: FieldFocus?
+
+    /// Every focusable field in entry order.
+    private var focusOrder: [FieldFocus] {
+        var order: [FieldFocus] = [.name]
+        for id in ["customDim1", "customDim2", "customDim3"] {
+            if units == .inches {
+                order.append(.measurement(key: id, part: .feet))
+                order.append(.measurement(key: id, part: .inches))
+            } else {
+                order.append(.measurement(key: id, part: .cm))
+            }
+        }
+        order.append(.weight)
+        return order
+    }
+
+    private func advanceFocus() {
+        guard let focus,
+              let index = focusOrder.firstIndex(of: focus),
+              index + 1 < focusOrder.count else {
+            self.focus = nil
+            return
+        }
+        self.focus = focusOrder[index + 1]
+    }
 
     private var units: MeasurementUnits { state.route.settings.units }
 
@@ -39,6 +65,9 @@ struct CustomPianoView: View {
         Form {
             Section("Name") {
                 TextField("e.g. “Grandma’s upright”", text: $name)
+                    .focused($focus, equals: .name)
+                    .submitLabel(.next)
+                    .onSubmit(advanceFocus)
                     .accessibilityIdentifier("customPianoName")
             }
             Section("Type") {
@@ -54,21 +83,30 @@ struct CustomPianoView: View {
                                  hint: "Measure the actual piano if you can.",
                                  draft: dim1,
                                  units: units,
-                                 fieldID: "customDim1")
+                                 fieldID: "customDim1",
+                                 focus: $focus,
+                                 onSubmit: advanceFocus)
                 MeasurementField(label: dimLabels[1],
                                  hint: "Measure the actual piano if you can.",
                                  draft: dim2,
                                  units: units,
-                                 fieldID: "customDim2")
+                                 fieldID: "customDim2",
+                                 focus: $focus,
+                                 onSubmit: advanceFocus)
                 MeasurementField(label: dimLabels[2],
                                  hint: "Measure the actual piano if you can.",
                                  draft: dim3,
                                  units: units,
-                                 fieldID: "customDim3")
+                                 fieldID: "customDim3",
+                                 focus: $focus,
+                                 onSubmit: advanceFocus)
             }
             Section("Weight (lb)") {
                 TextField("e.g. 550", text: $weightText)
                     .keyboardType(.decimalPad)
+                    .focused($focus, equals: .weight)
+                    .submitLabel(.done)
+                    .onSubmit { focus = nil }
                     .accessibilityIdentifier("customPianoWeight")
                 if !weightText.isEmpty && !weightValid {
                     FieldError("Weight must be a number above zero.")
@@ -86,6 +124,12 @@ struct CustomPianoView: View {
                 Button("Save") { save() }
                     .disabled(!allValid)
                     .accessibilityIdentifier("saveCustomPiano")
+            }
+            ToolbarItemGroup(placement: .keyboard) {
+                Button("Next") { advanceFocus() }
+                    .disabled(focus == focusOrder.last || focus == nil)
+                Spacer()
+                Button("Done") { focus = nil }
             }
         }
     }

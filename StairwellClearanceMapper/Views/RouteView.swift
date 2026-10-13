@@ -12,6 +12,11 @@ struct RouteView: View {
         content
             .navigationTitle("Route")
             .toolbar {
+                if !state.route.obstacles.isEmpty {
+                    ToolbarItem(placement: .topBarLeading) {
+                        EditButton()
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button("Load sample job") { state.loadSampleJob() }
@@ -22,11 +27,6 @@ struct RouteView: View {
                         Label("More", systemImage: "ellipsis.circle")
                     }
                     .accessibilityIdentifier("routeMenu")
-                }
-                if !state.route.obstacles.isEmpty {
-                    ToolbarItem(placement: .secondaryAction) {
-                        EditButton()
-                    }
                 }
             }
             .confirmationDialog("Remove the piano and every obstacle?",
@@ -68,10 +68,15 @@ struct RouteView: View {
         } actions: {
             Button("Choose a piano") { showPianoPicker = true }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 .accessibilityIdentifier("choosePianoEmpty")
             Button("Load sample job") { state.loadSampleJob() }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
                 .accessibilityIdentifier("loadSampleJobEmpty")
             Button("Add obstacle") { showKindPicker = true }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
                 .accessibilityIdentifier("addObstacleEmpty")
         }
     }
@@ -106,8 +111,10 @@ struct RouteView: View {
                         Image(systemName: "chevron.right")
                             .foregroundStyle(.tertiary)
                     }
-                    .frame(minHeight: 44)
-                }
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 .accessibilityIdentifier("pianoCard")
             }
 
@@ -116,16 +123,23 @@ struct RouteView: View {
                     Button {
                         editing = obstacle
                     } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(obstacle.name)
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text(summary(of: obstacle))
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(obstacle.name)
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                Text(summary(of: obstacle))
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.tertiary)
                         }
                         .frame(minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("obstacle.\(obstacle.name)")
                 }
                 .onDelete { state.route.obstacles.remove(atOffsets: $0) }
