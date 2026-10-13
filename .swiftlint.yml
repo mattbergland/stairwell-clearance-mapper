@@ -1,0 +1,42 @@
+excluded:
+  - StairwellClearanceMapper.xcodeproj
+  - DerivedData
+  - build
+  - .build
+opt_in_rules:
+  - empty_count
+  - force_unwrapping
+  - sorted_imports
+disabled_rules:
+  - force_unwrapping
+line_length:
+  warning: 160
+  error: 200
+identifier_name:
+  excluded:
+    - id
+    - up
+    - a
+    - b
+    - c
+    - w
+    - h
+    - i
+    - f
+    - d
+    - t
+    - l
+    - p
+    - s
+    - v
+    - go
+    - m
+    - n
+    - lh
+    - cm
+    - px
+    - py
+type_body_length:
+  warning: 400
+file_length:
+  warning: 600
