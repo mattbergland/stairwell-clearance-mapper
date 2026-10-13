@@ -1,0 +1,69 @@
+name: StairwellClearanceMapper
+options:
+  bundleIdPrefix: land.mattberg
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+targets:
+  StairwellClearanceMapper:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: StairwellClearanceMapper
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: land.mattberg.StairwellClearanceMapper
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_CFBundleDisplayName: Clearance Mapper
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+  StairwellClearanceMapperTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: StairwellClearanceMapperTests
+    dependencies:
+      - target: StairwellClearanceMapper
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: land.mattberg.StairwellClearanceMapperTests
+        GENERATE_INFOPLIST_FILE: "YES"
+        BUNDLE_LOADER: $(TEST_HOST)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/StairwellClearanceMapper.app/StairwellClearanceMapper
+  StairwellClearanceMapperUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: StairwellClearanceMapperUITests
+    dependencies:
+      - target: StairwellClearanceMapper
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: land.mattberg.StairwellClearanceMapperUITests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_TARGET_NAME: StairwellClearanceMapper
+schemes:
+  StairwellClearanceMapper:
+    build:
+      targets:
+        StairwellClearanceMapper: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - StairwellClearanceMapperTests
+        - StairwellClearanceMapperUITests
+    profile:
+      config: Release
+    archive:
+      config: Release
